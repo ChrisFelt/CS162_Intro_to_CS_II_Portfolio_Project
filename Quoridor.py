@@ -149,10 +149,30 @@ class QuoridorGame:
         set_pawn_loc. Finally, call check_win_condition method by passing the player, change the turn, and return True.
         If check_move_legality returns False, this method returns False."""
 
+        # check game status, values passed, and player turn with check_initial_parameters method
         if self.__check_initial_parameters(player, coord) is False:
-            return False
+            return False  # failed basic checks!
 
-        if
+        # check if move is illegal with check_move_legality method
+        if self.__check_move_legality(player, coord) is False:
+            return False  # illegal move
+
+        else:
+            # move pawn to new cell
+            self._board.get_cell(coord).set_pawn(True)
+            # remove pawn from last cell
+            self._board.get_cell(self._players[player].get_pawn_loc()).set_pawn(False)
+            # update player's pawn location
+            self._players[player].set_pawn_loc(coord)
+
+            # check if this move resulted in a win
+            if self.__check_win_condition(player):
+                return True  # turn is not changed
+
+            # change the turn
+            self.__change_turn()
+
+            return True
 
     def place_fence(self, player, orient, coord):
         """Given an integer that represents the player, a character (v or h) that represents orientation, and a tuple of
@@ -180,7 +200,13 @@ class QuoridorGame:
     def is_winner(self, player):
         """Given an integer that represents the player, checks if self._winner is equal to that integer. If it is,
         returns True. Otherwise, returns False."""
-        pass
+
+        # check if player passed is the winner
+        if self._winner == player:
+            return True
+
+        else:
+            return False
 
     def __check_move_legality(self, player, coord):
         """Given an integer that represents the player and a tuple of the coordinate locations of the attempted move,
@@ -202,6 +228,9 @@ class QuoridorGame:
         if orthogonal is None:
             if self.__diagonal_move(player, coord):
                 return True  # move was diagonal and legal!
+
+        else:
+            return False  # illegal move
 
     def __orthogonal_move(self, player, coord):
         """Given an integer that represents the player and a tuple of the coordinate location of the attempted move,
@@ -294,7 +323,6 @@ class QuoridorGame:
             else:
                 return False  # illegal move
 
-
     def __diagonal_move_vertical(self, coord, pawn_coord, value, side):
         """Given a tuple of two integers representing coordinates, the coordinates of the current player's pawn,
         an integer value 1 or -1, and a string that corresponds with a cell side, saves the following checks as
@@ -366,6 +394,38 @@ class QuoridorGame:
 
         return True
 
+    def __change_turn(self):
+        """Takes no parameters. Changes the turn to the next player. Returns nothing."""
+        # change to second player's turn if currently player one's turn
+        if self._player_turn == 1:
+            self._player_turn = 2
+
+        # change to first player's turn if currently player two's turn
+        else:
+            self._player_turn = 1
+
     def print_board(self):
         """Prints the current state of the Quoridor game board. Used for testing purposes only."""
-        pass
+
+        for col in range(9):  # iterate through cols
+
+            for row in range(9):  # iterate through rows
+
+                print(str(col)+str(row), " ", end='')  # print cell coords in line
+
+                if self._board.get_cell((col, row)).get_side("top"):
+                    print("t", end='')  # print top fence in line
+
+                if self._board.get_cell((col, row)).get_side("right"):
+                    print("r", end='')  # print right fence in line
+
+                if self._board.get_cell((col, row)).get_side("bot"):
+                    print("b", end='')  # print bottom fence in line
+
+                if self._board.get_cell((col, row)).get_side("left"):
+                    print("l", end='')  # print left fence in line
+
+                if self._board.get_cell((col, row)).get_pawn():
+                    print("P", end='')  # print pawne in line
+
+            print("\n")  # new line after each row
