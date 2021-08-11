@@ -4,15 +4,13 @@
 # Description: Program for playing a board game called Quoridor.
 
 class Cell:
-
     """Represents a cell on a Quoridor game board. Holds a dictionary of the four borders of the cell for board edges
     and placement of fences. When the Cell object is created, the initial values for the fences must be passed: None is
     assigned to the edges of the board, and False is assigned to all other borders (a True value means a fence exists
     on that border)."""
 
     def __init__(self, top, right, bot, left):
-
-        self._fence = {"top": top,      # fence values for the borders of the cell. None = edge of board.
+        self._fence = {"top": top,  # fence values for the borders of the cell. None = edge of board.
                        "right": right,  # False = no fence. True = fence.
                        "bot": bot,
                        "left": left}
@@ -43,7 +41,6 @@ class Cell:
 
 
 class Board:
-
     """Represents a board for a Quoridor game. Has a compositional relationship with the Cell class; upon creation,
     generates and holds a nested dictionary containing Cell objects for each cell of the board. The board and its
     cells are used by the QuoridorGame class to make moves and place fences."""
@@ -97,7 +94,6 @@ class Board:
 
 
 class Player:
-
     """Represents a player for the Quoridor game. With an initial ID and pawn location as specified by the initial
     parameters passed. The player also has an initial fences value of 10. The Player class is used by the QuoridorGame
     class to hold and manipulate these values in a single object."""
@@ -126,7 +122,6 @@ class Player:
 
 
 class QuoridorGame:
-
     """Represents a Quoridor game. Has a compositional relationship with the Player and Board classes; these classes are
     used to store much of the necessary data to play the game. The QuoridorGame calls these classes when it is
     initialized to create a board and two player objects. The game is played through the use of the QuoridorGame methods
@@ -208,6 +203,10 @@ class QuoridorGame:
             self._board.get_cell(coord).set_fence("left")  # place fence on left side of target cell
             # place another fence on the right side of cell to the left of target cell
             self._board.get_cell((coord[0] - 1, coord[1])).set_fence("right")
+
+        # check fair play
+        if not self.__check_fair_play(player):
+            return "breaks the fair play rule"
 
         # use player's fence
         self._players[player].use_fence()
@@ -397,7 +396,7 @@ class QuoridorGame:
 
         # call diagonal_move_vertical method to check vertical conditions
         if self.__diagonal_move_vertical(coord, pawn_coord, -1, "top") or \
-           self.__diagonal_move_vertical(coord, pawn_coord, 1, "bot"):
+                self.__diagonal_move_vertical(coord, pawn_coord, 1, "bot"):
 
             # check if move is to the left
             if pawn_coord[0] - 1 == coord[0]:
@@ -414,7 +413,7 @@ class QuoridorGame:
 
         # call diagonal_move_vertical method to check horizontal conditions
         if self.__diagonal_move_horizontal(coord, pawn_coord, -1, "left") or \
-           self.__diagonal_move_horizontal(coord, pawn_coord, 1, "right"):
+                self.__diagonal_move_horizontal(coord, pawn_coord, 1, "right"):
 
             # check if move is up
             if pawn_coord[1] - 1 == coord[1]:
@@ -550,13 +549,29 @@ class QuoridorGame:
 
         coord = self._players[player].get_pawn_loc()
 
-        return self.__rec_check_fair_play(player, coord, win)
+        return self.__rec_check_fair_play(coord, win)
 
-    def __rec_check_fair_play(self, player, coord, win):
+    def __rec_check_fair_play(self, pawn_coord, win, coord=None):
 
         # base case
-        if self.__orthogonal_move(player, coord):
-            return None
+        if coord is not None:
+
+            if coord[1] == win:
+                return True
+
+            if coord[0] not in range(9) or coord[1] not in range(9):
+                return False
+
+            if not self.__orthogonal_move_standard_check(coord, pawn_coord):
+                return False
+
+        if coord is None:
+            coord = pawn_coord
+
+        return self.__rec_check_fair_play(pawn_coord, win, (coord[0] + 1, coord[1])) or \
+            self.__rec_check_fair_play(pawn_coord, win, (coord[0] - 1, coord[1])) or \
+            self.__rec_check_fair_play(pawn_coord, win, (coord[0], coord[1] + 1)) or \
+            self.__rec_check_fair_play(pawn_coord, win, (coord[0], coord[1] - 1))
 
     def print_board(self):
         """Prints the current state of the Quoridor game board. Used for testing purposes only."""
@@ -565,7 +580,7 @@ class QuoridorGame:
 
             for col in range(9):  # iterate through rows
 
-                print(str(col)+str(row), end='')  # print cell coords in line
+                print(str(col) + str(row), end='')  # print cell coords in line
 
                 if self._board.get_cell((col, row)).get_fence("top"):
                     print("t", end='')  # print top fence in line
@@ -610,19 +625,19 @@ def main():
     """Used for testing basic moves when run from script."""
 
     q = QuoridorGame()
-    # print(q.move_pawn(2, (4,7)))  #moves the Player2 pawn -- invalid move because only Player1 can start, returns False
+    # print(q.move_pawn(2, (4,7)))  #moves the Player2 pawn --invalid move because only Player1 can start, returns False
     # print(q.move_pawn(1, (4,1)))  #moves the Player1 pawn -- valid move, returns True
-    q.place_fence(1, 'h',(6,5))  #places Player1's fence -- out of turn move, returns False
+    q.place_fence(1, 'h', (6, 5))  # places Player1's fence -- out of turn move, returns False
     # print(q.move_pawn(2, (4,7)))  #moves the Player2 pawn -- valid move, returns True
-    print(q.place_fence(1, 'h',(6,5)))  #places Player1's fence -- returns True
-    q.place_fence(2, 'v',(3,3))  #places Player2's fence -- returns True
-    print(q.is_winner(1))  #returns False because Player 1 has not won
-    print(q.is_winner(2))  #returns False because Player 2 has not won
+    print(q.place_fence(1, 'h', (6, 5)))  # places Player1's fence -- returns True
+    q.place_fence(2, 'v', (3, 3))  # places Player2's fence -- returns True
+    print(q.is_winner(1))  # returns False because Player 1 has not won
+    print(q.is_winner(2))  # returns False because Player 2 has not won
 
-    q.place_fence(1, 'h',(5,5))
-    q.place_fence(2, 'v',(5,5))
-    print(q.place_fence(1, 'h',(2,5)))
-    print(q.move_pawn(2, (8,7)))
+    q.place_fence(1, 'h', (5, 5))
+    q.place_fence(2, 'v', (5, 5))
+    print(q.place_fence(1, 'h', (2, 5)))
+    print(q.move_pawn(2, (8, 7)))
 
     # q.print_board()
 
