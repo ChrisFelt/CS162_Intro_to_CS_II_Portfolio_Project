@@ -204,10 +204,6 @@ class QuoridorGame:
             # place another fence on the right side of cell to the left of target cell
             self._board.get_cell((coord[0] - 1, coord[1])).set_fence("right")
 
-        # check fair play
-        if not self.__check_fair_play(player):
-            return "breaks the fair play rule"
-
         # use player's fence
         self._players[player].use_fence()
 
@@ -535,43 +531,6 @@ class QuoridorGame:
         # change to first player's turn if currently player two's turn
         else:
             self._player_turn = 1
-
-    def __check_fair_play(self, player):
-
-        # find opposing player
-        if player == 1:
-            player = 2
-            win = 0
-
-        else:
-            player = 1
-            win = 8
-
-        coord = self._players[player].get_pawn_loc()
-
-        return self.__rec_check_fair_play(coord, win)
-
-    def __rec_check_fair_play(self, pawn_coord, win, coord=None):
-
-        # base case
-        if coord is not None:
-
-            if coord[1] == win:
-                return True
-
-            if coord[0] not in range(9) or coord[1] not in range(9):
-                return False
-
-            if not self.__orthogonal_move_standard_check(coord, pawn_coord):
-                return False
-
-        if coord is None:
-            coord = pawn_coord
-
-        return self.__rec_check_fair_play(pawn_coord, win, (coord[0] + 1, coord[1])) or \
-            self.__rec_check_fair_play(pawn_coord, win, (coord[0] - 1, coord[1])) or \
-            self.__rec_check_fair_play(pawn_coord, win, (coord[0], coord[1] + 1)) or \
-            self.__rec_check_fair_play(pawn_coord, win, (coord[0], coord[1] - 1))
 
     def print_board(self):
         """Prints the current state of the Quoridor game board. Used for testing purposes only."""
