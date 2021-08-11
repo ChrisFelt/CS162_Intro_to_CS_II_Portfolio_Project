@@ -296,33 +296,84 @@ class QuoridorGame:
         destination cell. If none, returns True. Otherwise, returns False."""
         pawn_coord = self._players[player].get_pawn_loc()  # current player's pawn coordinates
 
-        # check if direction of move is orthogonal
-        if pawn_coord[0] + 1 == coord[0] and pawn_coord[1] == coord[1]:  # moving to right
-            if self._board.get_cell(pawn_coord).get_fence("right"):  # check right side of current cell
-                return False  # fence in the way!
-            else:
-                return True  # the way is clear
-
-        if pawn_coord[0] - 1 == coord[0] and pawn_coord[1] == coord[1]:  # moving to left
-            if self._board.get_cell(pawn_coord).get_fence("left"):  # check left side of current cell
-                return False  # fence in the way!
-            else:
-                return True  # the way is clear
-
-        if pawn_coord[0] == coord[0] and pawn_coord[1] + 1 == coord[1]:  # moving down
-            if self._board.get_cell(pawn_coord).get_fence("bot"):  # check bottom side of current cell
-                return False  # fence in the way!
-            else:
-                return True  # the way is clear
-
-        if pawn_coord[0] == coord[0] and pawn_coord[1] - 1 == coord[1]:  # moving up
-            if self._board.get_cell(pawn_coord).get_fence("top"):  # check top side of current cell
-                return False  # fence in the way!
-            else:
-                return True  # the way is clear
+        if player == 1:
+            enemy_pawn = self._players[2].get_pawn_loc()
 
         else:
-            return None  # not orthogonal (OR fenced in - used only in fair play rule)
+            enemy_pawn = self._players[1].get_pawn_loc()
+
+        # check if direction of move is orthogonal
+        standard_orthogonal = self.__orthogonal_move_standard_check(coord, pawn_coord)
+        if standard_orthogonal:
+            return True
+
+        # check if direction of move is orthogonal and move is a jump over enemy pawn
+        jump_orthogonal = self.__orthogonal_move_jump_check(coord, pawn_coord, enemy_pawn)
+        if jump_orthogonal:
+            return True
+
+        if standard_orthogonal is None and jump_orthogonal is None:
+            return None  # not orthogonal (used only in fair play rule)
+
+        else:
+            return False
+
+    def __orthogonal_move_standard_check(self, coord, pawn_coord):
+        """Given the pawn coordinates of the current player and a side, returns False if a fence is on that side of the
+        cell. Otherwise returns True."""
+
+        # find direction of movement if orthogonal
+        if pawn_coord[0] + 1 == coord[0] and pawn_coord[1] == coord[1]:  # moving to right
+            return self.__orthogonal_fence_check(pawn_coord, "right")
+
+        if pawn_coord[0] - 1 == coord[0] and pawn_coord[1] == coord[1]:  # moving to left
+            return self.__orthogonal_fence_check(pawn_coord, "left")
+
+        if pawn_coord[0] == coord[0] and pawn_coord[1] + 1 == coord[1]:  # moving down
+            return self.__orthogonal_fence_check(pawn_coord, "bot")
+
+        if pawn_coord[0] == coord[0] and pawn_coord[1] - 1 == coord[1]:  # moving up
+            return self.__orthogonal_fence_check(pawn_coord, "top")
+
+    def __orthogonal_move_jump_check(self, coord, pawn_coord, enemy_pawn):
+
+        # check if attempting orthogonal jump
+        if pawn_coord[0] + 2 == coord[0] and pawn_coord[1] == coord[1]:  # moving to right
+            adjacent = (pawn_coord[0] + 1, pawn_coord[1])  # bookmark cell being jumped
+            return self.__orthogonal_fence_check(pawn_coord, "right", enemy_pawn, adjacent)  # check the way
+
+        if pawn_coord[0] - 2 == coord[0] and pawn_coord[1] == coord[1]:  # moving to left
+            adjacent = (pawn_coord[0] - 1, pawn_coord[1])  # bookmark cell being jumped
+            return self.__orthogonal_fence_check(pawn_coord, "left", enemy_pawn, adjacent)  # check the way
+
+        if pawn_coord[0] == coord[0] and pawn_coord[1] + 2 == coord[1]:  # moving down
+            adjacent = (pawn_coord[0], pawn_coord[1] + 1)  # bookmark cell being jumped
+            return self.__orthogonal_fence_check(pawn_coord, "bot", enemy_pawn, adjacent)  # check the way
+
+        if pawn_coord[0] == coord[0] and pawn_coord[1] - 2 == coord[1]:  # moving up
+            adjacent = (pawn_coord[0], pawn_coord[1] - 1)  # bookmark cell being jumped
+            return self.__orthogonal_fence_check(pawn_coord, "top", enemy_pawn, adjacent)  # check the way
+
+    def __orthogonal_fence_check(self, pawn_coord, side, enemy_pawn=None, adjacent=None):
+
+        # jump orthogonal fence check
+        if enemy_pawn is not None and adjacent is not None:
+            # check if opposing pawn adjacent in direction of jump
+            if enemy_pawn != adjacent:
+                return False
+
+            # check given side of player pawn's cell AND enemy pawn's cell
+            if self._board.get_cell(pawn_coord).get_fence(side) or self._board.get_cell(enemy_pawn).get_fence(side):
+                return False  # fence in the way!
+            else:
+                return True  # the way is clear
+
+        # standard orthogonal fence check
+        else:
+            if self._board.get_cell(pawn_coord).get_fence(side):  # check given side of current cell
+                return False  # fence in the way!
+            else:
+                return True  # the way is clear
 
     def __diagonal_move(self, player, coord):
         """Given an integer that represents the player and a tuple of the coordinate location of the attempted move,
@@ -387,17 +438,18 @@ class QuoridorGame:
         3. No fences obstruct movement to destination cell.
         Returns True if all of these conditions are True. Otherwise, returns False"""
 
-        if coord[1] + value not in range(9):
+        # make sure cells checked are not out of bounds
+        if pawn_coord[1] + value not in range(9):
             return False
 
         # check if move is up or down
         direc = pawn_coord[1] + value == coord[1]
         # check if opposing pawn orthogonally up or down and adjacent
-        pawn = self._board.get_cell((coord[0], coord[1] + value)).get_pawn()
+        enemy_pawn = self._board.get_cell((pawn_coord[0], pawn_coord[1] + value)).get_pawn()
         # check if fence behind opposing pawn
-        fence = self._board.get_cell((coord[0], coord[1] + value)).get_fence(side)
+        fence = self._board.get_cell((pawn_coord[0], pawn_coord[1] + value)).get_fence(side)
 
-        return direc and pawn and fence
+        return direc and enemy_pawn and fence
 
     def __diagonal_move_horizontal(self, coord, pawn_coord, value, side):
         """Given a tuple of two integers representing coordinates, the coordinates of the current player's pawn,
@@ -408,31 +460,34 @@ class QuoridorGame:
         3. No fences obstruct movement to destination cell.
         Returns True if all of these conditions are True. Otherwise, returns False"""
 
-        if coord[0] + value not in range(9):
+        # make sure cells checked are not out of bounds
+        if pawn_coord[0] + value not in range(9):
             return False
 
         # check if move is left or right
         direc = pawn_coord[0] + value == coord[0]
         # check if opposing pawn orthogonally left or right and adjacent
-        pawn = self._board.get_cell((coord[0] + value, coord[1])).get_pawn()
+        enemy_pawn = self._board.get_cell((pawn_coord[0] + value, pawn_coord[1])).get_pawn()
         # check if fence behind opposing pawn
-        fence = self._board.get_cell((coord[0] + value, coord[1])).get_fence(side)
+        fence = self._board.get_cell((pawn_coord[0] + value, pawn_coord[1])).get_fence(side)
 
-        return direc and pawn and fence
+        return direc and enemy_pawn and fence
 
     def __check_win_condition(self, player):
-        """Given an integer that represents the player, if player 1, checks if their pawn location is on row 8. If it
-        is, sets self._winner to 1 and returns True. If player 2, checks if their pawn location is on row 0. If it
-        is, sets self._winner to 2 and returns True. Otherwise returns False."""
+        """Given an integer that represents the player, returns True if win conditions have been met. Otherwise returns
+        False."""
+
+        # if player 1, check if win conditions have been met
         if player == 1 and self._players[1].get_pawn_loc()[1] == 8:
             self._winner = 1
             return True
 
+        # if player 2, check if win conditions have been met
         if player == 2 and self._players[2].get_pawn_loc()[1] == 0:
             self._winner = 2
             return True
 
-        return False
+        return False  # no winners yet
 
     def __check_initial_parameters(self, player, coord, orient=None):
         """Given an integer that represents the player, a tuple of the coordinate location of the attempted fence
@@ -482,6 +537,27 @@ class QuoridorGame:
         else:
             self._player_turn = 1
 
+    def __check_fair_play(self, player):
+
+        # find opposing player
+        if player == 1:
+            player = 2
+            win = 0
+
+        else:
+            player = 1
+            win = 8
+
+        coord = self._players[player].get_pawn_loc()
+
+        return self.__rec_check_fair_play(player, coord, win)
+
+    def __rec_check_fair_play(self, player, coord, win):
+
+        # base case
+        if self.__orthogonal_move(player, coord):
+            return None
+
     def print_board(self):
         """Prints the current state of the Quoridor game board. Used for testing purposes only."""
 
@@ -510,20 +586,47 @@ class QuoridorGame:
 
             print("\n")  # new line after each row
 
+    def change_pawn_loc(self, p1, p2):
+        """Given two tuples, one for player 1 and one for player 2, changes the player's pawn locations to the new
+        tuples, respectively. Returns a string. Used for testing purposes only."""
 
-q = QuoridorGame()
-# print(q.move_pawn(2, (4,7)))  #moves the Player2 pawn -- invalid move because only Player1 can start, returns False
-# print(q.move_pawn(1, (4,1)))  #moves the Player1 pawn -- valid move, returns True
-q.place_fence(1, 'h',(6,5))  #places Player1's fence -- out of turn move, returns False
-# print(q.move_pawn(2, (4,7)))  #moves the Player2 pawn -- valid move, returns True
-print(q.place_fence(1, 'h',(6,5)))  #places Player1's fence -- returns True
-q.place_fence(2, 'v',(3,3))  #places Player2's fence -- returns True
-print(q.is_winner(1))  #returns False because Player 1 has not won
-print(q.is_winner(2))  #returns False because Player 2 has not won
+        # remove pawns from board
+        self._board.get_cell(self._players[1].get_pawn_loc()).set_pawn(False)
+        self._board.get_cell(self._players[2].get_pawn_loc()).set_pawn(False)
 
-q.place_fence(1, 'h',(5,5))
-q.place_fence(2, 'v',(5,5))
-print(q.place_fence(1, 'h',(2,5)))
-print(q.move_pawn(2, (8,7)))
+        # change pawn location for each player
+        self._players[1].set_pawn_loc(p1)
+        self._players[2].set_pawn_loc(p2)
 
-# q.print_board()
+        # replace pawns on board
+        self._board.get_cell(p1).set_pawn(True)
+        self._board.get_cell(p2).set_pawn(True)
+
+        return "Cheater."
+
+
+# define main function
+def main():
+    """Used for testing basic moves when run from script."""
+
+    q = QuoridorGame()
+    # print(q.move_pawn(2, (4,7)))  #moves the Player2 pawn -- invalid move because only Player1 can start, returns False
+    # print(q.move_pawn(1, (4,1)))  #moves the Player1 pawn -- valid move, returns True
+    q.place_fence(1, 'h',(6,5))  #places Player1's fence -- out of turn move, returns False
+    # print(q.move_pawn(2, (4,7)))  #moves the Player2 pawn -- valid move, returns True
+    print(q.place_fence(1, 'h',(6,5)))  #places Player1's fence -- returns True
+    q.place_fence(2, 'v',(3,3))  #places Player2's fence -- returns True
+    print(q.is_winner(1))  #returns False because Player 1 has not won
+    print(q.is_winner(2))  #returns False because Player 2 has not won
+
+    q.place_fence(1, 'h',(5,5))
+    q.place_fence(2, 'v',(5,5))
+    print(q.place_fence(1, 'h',(2,5)))
+    print(q.move_pawn(2, (8,7)))
+
+    # q.print_board()
+
+
+# run main function if run as script
+if __name__ == '__main__':
+    main()
