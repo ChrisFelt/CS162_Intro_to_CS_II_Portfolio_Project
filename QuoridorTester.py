@@ -1,4 +1,4 @@
-from Quoridor import Cell, Board, Player, QuoridorGame
+from Quoridor import QuoridorGame
 import unittest
 
 
