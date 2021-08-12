@@ -497,6 +497,42 @@ class UnitTests(unittest.TestCase):
 
         # q.print_board()
 
+        # ----------------------------- double fence test ------------------------------------
+        # start new game horizontal test
+        q = QuoridorGame()
+        q.change_pawn_loc((3, 2), (4, 2))
+
+        # fence setup
+        self.assertTrue(q.place_fence(1, 'v', (4, 2)))
+        self.assertTrue(q.place_fence(2, 'v', (5, 2)))
+
+        self.assertFalse(q.move_pawn(1, (4, 1)))
+        # player 1 drops fence
+        self.assertTrue(q.place_fence(1, 'v', (3, 2)))
+
+        # test diagonal moves player 2
+        self.assertFalse(q.move_pawn(1, (3, 1)))
+
+        q.print_board()
+
+        # start new game vertical test
+        q = QuoridorGame()
+        q.change_pawn_loc((4, 1), (4, 2))
+
+        # place fences
+        self.assertTrue(q.place_fence(1, 'h', (4, 3)))
+        self.assertTrue(q.place_fence(2, 'h', (4, 2)))
+
+        # test diagonal moves player 1
+        self.assertFalse(q.move_pawn(1, (3, 2)))
+        # player 1 drops fence
+        self.assertTrue(q.place_fence(1, 'h', (4, 1)))
+
+        # test diagonal moves player 2
+        self.assertFalse(q.move_pawn(1, (5, 1)))
+
+        # q.print_board()
+
     def test_QuoridorGame_orthogonal_edge_case(self):
         """Test all edge cases for horizontal move."""
 
@@ -743,3 +779,87 @@ class UnitTests(unittest.TestCase):
 
         # jump down player 2
         self.assertTrue(q.move_pawn(2, (4, 3)))
+
+        # ----------------------------- edge of board test ------------------------------------
+
+        # start new game left-right test
+        q = QuoridorGame()
+        q.change_pawn_loc((0, 2), (8, 2))
+
+        # player 1 attempts to move off board
+        self.assertFalse(q.move_pawn(1, (-1, 2)))
+
+        # player 1 attempts to jump off board
+        self.assertFalse(q.move_pawn(1, (-2, 2)))
+
+        # player 1 moves
+        self.assertTrue(q.move_pawn(1, (1, 2)))
+
+        # player 2 attempts to move off board
+        self.assertFalse(q.move_pawn(2, (9, 2)))
+
+        # player 2 attempts to jump off board
+        self.assertFalse(q.move_pawn(2, (10, 2)))
+
+        # start new game up-down test
+        q = QuoridorGame()
+        q.change_pawn_loc((2, 0), (2, 8))
+
+        # player 1 attempts to move off board
+        self.assertFalse(q.move_pawn(1, (2, -1)))
+
+        # player 1 attempts to jump off board
+        self.assertFalse(q.move_pawn(1, (2, -2)))
+
+        # player 1 moves
+        self.assertTrue(q.move_pawn(1, (2, 1)))
+
+        # player 2 attempts to move off board
+        self.assertFalse(q.move_pawn(2, (2, 9)))
+
+        # player 2 attempts to jump off board
+        self.assertFalse(q.move_pawn(2, (2, 10)))
+
+        # q.print_board()
+
+        # start new game pawn adjacent test jump up
+        q = QuoridorGame()
+        q.change_pawn_loc((2, 1), (2, 0))
+
+        # player 1 attempts to jump off board
+        self.assertFalse(q.move_pawn(1, (2, -1)))
+
+        # player 1 moves
+        self.assertTrue(q.move_pawn(1, (2, 2)))
+
+        # start new game pawn adjacent test jump down
+        q = QuoridorGame()
+        q.change_pawn_loc((2, 7), (2, 8))
+
+        # player 1 attempts to jump off board
+        self.assertFalse(q.move_pawn(1, (2, 9)))
+
+        # player 1 moves
+        self.assertTrue(q.move_pawn(1, (2, 6)))
+
+        # start new game pawn adjacent test jump right
+        q = QuoridorGame()
+        q.change_pawn_loc((7, 2), (8, 2))
+
+        # player 1 attempts to jump off board
+        self.assertFalse(q.move_pawn(1, (9, 2)))
+
+        # player 1 moves
+        self.assertTrue(q.move_pawn(1, (6, 2)))
+
+        # start new game pawn adjacent test jump left
+        q = QuoridorGame()
+        q.change_pawn_loc((1, 2), (0, 2))
+
+        # player 1 attempts to jump off board
+        self.assertFalse(q.move_pawn(1, (-1, 2)))
+
+        # player 1 moves
+        self.assertTrue(q.move_pawn(1, (2, 2)))
+
+        # q.print_board()

@@ -8,7 +8,7 @@ class Cell:
     and placement of fences. When the Cell object is created, the initial values for the fences must be passed: None is
     assigned to the edges of the board, and False is assigned to all other borders (a True value means a fence exists
     on that border)."""
-
+    # initialize data members
     def __init__(self, top, right, bot, left):
         self._fence = {"top": top,  # fence values for the borders of the cell. None = edge of board.
                        "right": right,  # False = no fence. True = fence.
@@ -20,23 +20,19 @@ class Cell:
     def get_fence(self, side):
         """Takes a string corresponding with one of the keys in the self._fence dictionary and returns the value for
         that key."""
-
         return self._fence[side]
 
     def set_fence(self, side):
         """Takes a string that corresponds with one of the keys in the self._fence dictionary and sets the value for
         that key to True. Returns nothing."""
-
         self._fence[side] = True
 
     def set_pawn(self, value):
         """Takes a Boolean and sets self._pawn to that value. Returns nothing."""
-
         self._pawn = value
 
     def get_pawn(self):
         """Takes no parameters and returns self._pawn."""
-
         return self._pawn
 
 
@@ -44,9 +40,8 @@ class Board:
     """Represents a board for a Quoridor game. Has a compositional relationship with the Cell class; upon creation,
     generates and holds a nested dictionary containing Cell objects for each cell of the board. The board and its
     cells are used by the QuoridorGame class to make moves and place fences."""
-
+    # initialize data members
     def __init__(self):
-
         self._cells = {}  # create empty cells dictionary
         self.__generate_cells()  # call generate cells to create the cell dictionary
 
@@ -56,7 +51,6 @@ class Board:
         a dictionary). The nested dictionary in turn contains the row number as key and a cell object is generated as
         the value. Cell object's fence will be set to None where the edge of the board lies and False for all other cell
         borders."""
-
         # iterate through columns
         for col in range(9):
             self._cells[col] = {}  # nested empty dictionary with col as key
@@ -83,21 +77,20 @@ class Board:
                     bot = None
                 else:
                     bot = False
-                # create Cell object as the value for row
+                # create Cell object as the value with row as key
                 self._cells[col][row] = Cell(top, right, bot, left)
 
     def get_cell(self, coord):
         """Takes a tuple with integer values for column and row as the parameter and returns a Cell object at the
-        dictionary location corresponding with coord."""
-
+        dictionary location corresponding with those coordinates."""
         return self._cells[coord[0]][coord[1]]  # return cell object at coord
 
 
 class Player:
-    """Represents a player for the Quoridor game. With an initial ID and pawn location as specified by the initial
+    """Represents a player for the Quoridor game, with an initial ID and pawn location as specified by the initial
     parameters passed. The player also has an initial fences value of 10. The Player class is used by the QuoridorGame
     class to hold and manipulate these values in a single object."""
-
+    # initialize data members
     def __init__(self, player_id, pawn_loc):
         self._player_id = player_id  # player number (e.g., 1, 2)
         self._pawn_loc = pawn_loc  # cell coordinates of current pawn location
@@ -126,9 +119,8 @@ class QuoridorGame:
     used to store much of the necessary data to play the game. The QuoridorGame calls these classes when it is
     initialized to create a board and two player objects. The game is played through the use of the QuoridorGame methods
     move_pawn and place_fence. Game status can be checked with the is_winner method."""
-
+    # initialize data members
     def __init__(self):
-
         self._board = Board()  # generate game board object with Game class
 
         # generate dictionary of player objects. pass initial pawn locations
@@ -139,18 +131,14 @@ class QuoridorGame:
         self._board.get_cell((4, 0)).set_pawn(True)
         self._board.get_cell((4, 8)).set_pawn(True)
 
-        self._winner = None  # track game status. can be None, 1, or 2
+        self._winner = None  # track winner of the game. can be None, 1, or 2
         self._player_turn = 1  # track turn. player 1 goes first
 
     def move_pawn(self, player, coord):
         """Given an integer that represents the player and a tuple of the coordinate location of the attempted
-        attempted move, first calls the check_initial_parameters method. If False, returns False.
-        Otherwise, calls the check_move_legality method. If True, move the pawn by passing
-        True to the cell at coord's set_pawn method, clear the previous cell by calling the Player's get_pawn_loc
-        method and passing False to the cell at the coord returned, then pass the new coord to the Player's
-        set_pawn_loc. Finally, call check_win_condition method by passing the player, change the turn, and return True.
-        If check_move_legality returns False, this method returns False."""
-
+        attempted move, calls the check_initial_parameters and check_move_legality methods to determine if values
+        passed and movement are valid. If they aren't, returns False. Otherwise, moves the pawn to the target cell,
+        checks the win conditions, changes the turn, and returns True."""
         # check game status, values passed, and player turn with check_initial_parameters method
         if not self.__check_initial_parameters(player, coord):
             return False  # failed basic checks!
@@ -178,17 +166,15 @@ class QuoridorGame:
 
     def place_fence(self, player, orient, coord):
         """Given an integer that represents the player, a character (v or h) that represents orientation, and a tuple of
-        the coordinate location of the attempted fence placement, first first calls the check_initial_parameters method.
-        If False, returns False. Otherwise calls check_fence_legality. If False, returns False. If True, checks if
-        orient is "h". If it is, use coords to locate cell in the self._board dictionary and passes "top" to set_fence
-        method of the cell. Additionally passes "bot" to the set_fence method of the cell above it, calls the use_fence
-        method for the Player, changes player turn, and then returns True. If not "h", checks if orient is "v". If it
-        is, use coords to locate cell in the self._board dictionary and passes "left" to set_fence method of the cell.
-        Additionally passes "right" to the set_fence method of the cell to the left of it, calls the use_fence method
-        for the Player, changes player turn, and then returns True."""
+        the coordinate location of the attempted fence placement, calls the check_initial_parameters and
+        check_fence_legality methods to determine if values passed and fence placement are valid. If they aren't returns
+        False. Otherwise, places the fence in the target cell, reduces the player's fences by 1, changes the turn, and
+        returns True."""
+        # check initial parameters
         if not self.__check_initial_parameters(player, coord, orient):
             return False
 
+        # check if fence placement legal
         if not self.__check_fence_legality(orient, coord):
             return False
 
@@ -214,13 +200,8 @@ class QuoridorGame:
 
     def __check_fence_legality(self, orient, coord):
         """Given a character (v or h) that represents orientation, and a tuple of the coordinate location of the
-        attempted fence placement, first checks if the current player has 1 or more fences remaining using the
-        get_fences method for the Player. If False, returns False. Otherwise, checks if orient is "h". If it is,
-        checks if coords are on board AND row is not 0. If True, checks if no fence in place by passing "top" to the
-        get_fence method of the cell. If no fence in place, returns True. Otherwise returns False. If not "h", checks if
-        orient is "v". If it is, checks if coords are on board AND col is not 0. If True, checks if no fence in place
-        by passing "left" to the get_fence method of the cell. If no fence in place, returns True. Otherwise returns
-        False."""
+        attempted fence placement, returns False if the player is out of fences, or if the fence placement was illegal.
+        Otherwise returns True."""
         # check player's remaining fences
         if self._players[self._player_turn].get_fences() < 1:
             return False  # not enough fences!
@@ -250,7 +231,6 @@ class QuoridorGame:
     def is_winner(self, player):
         """Given an integer that represents the player, checks if self._winner is equal to that integer. If it is,
         returns True. Otherwise, returns False."""
-
         # check if player passed is the winner
         if self._winner == player:
             return True
@@ -260,11 +240,8 @@ class QuoridorGame:
 
     def __check_move_legality(self, player, coord):
         """Given an integer that represents the player and a tuple of the coordinate locations of the attempted move,
-        determines if the opponent's pawn is in the target cell. If it is, returns False. If not, then calls the
-        orthogonal_move function. If the orthogonal_move function returns True, returns True. If False, calls the
-        diagonal_move function. If the diagonal_move function returns True, returns True. Otherwise, this method returns
+        returns True if the move was legal by calling the orthogonal_move and diagonal_move methods. Otherwise returns
         False."""
-
         # check for opponent's pawn in destination cell
         if self._board.get_cell(coord).get_pawn():
             return False
@@ -284,11 +261,8 @@ class QuoridorGame:
 
     def __orthogonal_move(self, player, coord):
         """Given an integer that represents the player and a tuple of the coordinate location of the attempted move,
-        first checks if the move is orthogonally adjacent to the current location of the pawn. If it is, checks that
-        the opposing player's pawn is not in the destination cell or a fence is in the way - if there aren't, returns
-        True. Otherwise checks if destination is 2 spaces away and opposing player's pawn is between the current
-        location of the pawn and the destination cell. If they are, checks for fences between the current cell and
-        destination cell. If none, returns True. Otherwise, returns False."""
+        returns True if the move was orthogonal and legal. Returns False if the move was orthogonal and illegal. Returns
+        None if the move was not orthogonal."""
         pawn_coord = self._players[player].get_pawn_loc()  # current player's pawn coordinates
 
         if player == 1:
@@ -308,15 +282,14 @@ class QuoridorGame:
             return True
 
         if standard_orthogonal is None and jump_orthogonal is None:
-            return None  # not orthogonal (used only in fair play rule)
+            return None  # not orthogonal
 
         else:
             return False
 
     def __orthogonal_move_standard_check(self, coord, pawn_coord):
-        """Given the pawn coordinates of the current player and a side, returns False if a fence is on that side of the
-        cell. Otherwise returns True."""
-
+        """Given the coordinates of the move and the pawn coordinates of the current player both as tuples, finds
+        direction of move and returns a call of the orthogonal_fence_check method."""
         # find direction of movement if orthogonal
         if pawn_coord[0] + 1 == coord[0] and pawn_coord[1] == coord[1]:  # moving to right
             return self.__orthogonal_fence_check(pawn_coord, "right")
@@ -331,7 +304,8 @@ class QuoridorGame:
             return self.__orthogonal_fence_check(pawn_coord, "top")
 
     def __orthogonal_move_jump_check(self, coord, pawn_coord, enemy_pawn):
-
+        """Given target coordinates, player's pawn coordinates, and enemy pawn coordinates each as a tuple, finds the
+        direction of the move and returns a call of the orthogonal_fence_check method."""
         # check if attempting orthogonal jump
         if pawn_coord[0] + 2 == coord[0] and pawn_coord[1] == coord[1]:  # moving to right
             adjacent = (pawn_coord[0] + 1, pawn_coord[1])  # bookmark cell being jumped
@@ -350,7 +324,9 @@ class QuoridorGame:
             return self.__orthogonal_fence_check(pawn_coord, "top", enemy_pawn, adjacent)  # check the way
 
     def __orthogonal_fence_check(self, pawn_coord, side, enemy_pawn=None, adjacent=None):
-
+        """Given pawn_coord as a tuple, a side of a cell as a string for a standard orthogonal move, and enemy_pawn
+        coordinates as a tuple and the coordinates of the adjacent cell as a tuple in addition for jump moves, returns
+        False if a fence bars the way. Otherwise returns True."""
         # jump orthogonal fence check
         if enemy_pawn is not None and adjacent is not None:
             # check if opposing pawn adjacent in direction of jump
@@ -372,21 +348,9 @@ class QuoridorGame:
 
     def __diagonal_move(self, player, coord):
         """Given an integer that represents the player and a tuple of the coordinate location of the attempted move,
-        first checks if the move is up AND the opposing pawn is up AND a fence is behind the opposing pawn OR the move
-        is down AND the opposing pawn is down AND a fence is behind the opposing pawn. Then checks if the move is one to
-        the left. If it is, checks the right side of the destination cell if there is a fence. If not, returns True.
-        Otherwise, returns False. If the move is not to the left, checks if the move is one to the right. If it is,
-        checks the left side of the destination cell if there is a fence. If not, returns True. Otherwise, returns
-        False.
-        If the opposing pawn is not to the top or bottom of the current player's pawn, checks if it is to the left AND
-        move is to the left AND a fence is behind the opposing pawn OR checks if it is to the right AND the move is to
-        the right AND a fence is behind the opposing pawn. If true, checks if the move is up one. If it is, checks the
-        bottom side of the destination cell for a fence. If none, returns True. If the move is not up, checks if the
-        move is down one. If it is, checks the top side of the destination cell if there is a fence. If not, returns
-        True. Otherwise, returns False.
-        If none of the above, returns False. (Note: if this method becomes too long, it will be split into two parts,
-        one for each paragraph above.)"""
-
+        calls the diagonal_move_vertical and/or the diagonal_move_horizontal methods to check direction of move
+        relative to the enemy pawn, then returns True if the move was legal and not blocked by a fence. Otherwise,
+        returns False."""
         pawn_coord = self._players[player].get_pawn_loc()  # current player's pawn coordinates
         tar_cell = self._board.get_cell(coord)  # destination cell object
 
@@ -426,13 +390,9 @@ class QuoridorGame:
 
     def __diagonal_move_vertical(self, coord, pawn_coord, value, side):
         """Given a tuple of two integers representing coordinates, the coordinates of the current player's pawn,
-        an integer value 1 or -1, and a string that corresponds with a cell side, saves the following checks as
-        Booleans:
-        1. Destination cell is up or down
-        2. Opposing pawn is adjacent and orthogonally up or down with respect to current player's pawn
-        3. No fences obstruct movement to destination cell.
-        Returns True if all of these conditions are True. Otherwise, returns False"""
-
+        an integer value 1 or -1, returns True/False for each of the following checks: 1) move is vertical, 2) opposing
+        pawn is vertical and adjacent, 3) a fence is behind the opposing pawn, and 4) no fence in between
+        player's pawn and opposing pawn."""
         # make sure cells checked are not out of bounds
         if pawn_coord[1] + value not in range(9):
             return False
@@ -442,19 +402,17 @@ class QuoridorGame:
         # check if opposing pawn orthogonally up or down and adjacent
         enemy_pawn = self._board.get_cell((pawn_coord[0], pawn_coord[1] + value)).get_pawn()
         # check if fence behind opposing pawn
-        fence = self._board.get_cell((pawn_coord[0], pawn_coord[1] + value)).get_fence(side)
+        far_fence = self._board.get_cell((pawn_coord[0], pawn_coord[1] + value)).get_fence(side)
+        # check if fence in the way in current player's pawn's cell
+        adjacent_fence = not self._board.get_cell(pawn_coord).get_fence(side)
 
-        return direc and enemy_pawn and fence
+        return direc and enemy_pawn and far_fence and adjacent_fence
 
     def __diagonal_move_horizontal(self, coord, pawn_coord, value, side):
         """Given a tuple of two integers representing coordinates, the coordinates of the current player's pawn,
-        an integer value 1 or -1, and a string that corresponds with a cell side, saves the following checks as
-        Booleans:
-        1. Destination cell is left or right
-        2. Opposing pawn is adjacent and orthogonally left or right with respect to current player's pawn
-        3. No fences obstruct movement to destination cell.
-        Returns True if all of these conditions are True. Otherwise, returns False"""
-
+        an integer value 1 or -1, returns True/False for each of the following checks: 1) move is horizontal, 2)
+        opposing pawn is horizontal and adjacent, 3) a fence is behind the opposing pawn, and 4) no fence in between
+        player's pawn and opposing pawn."""
         # make sure cells checked are not out of bounds
         if pawn_coord[0] + value not in range(9):
             return False
@@ -464,14 +422,15 @@ class QuoridorGame:
         # check if opposing pawn orthogonally left or right and adjacent
         enemy_pawn = self._board.get_cell((pawn_coord[0] + value, pawn_coord[1])).get_pawn()
         # check if fence behind opposing pawn
-        fence = self._board.get_cell((pawn_coord[0] + value, pawn_coord[1])).get_fence(side)
+        far_fence = self._board.get_cell((pawn_coord[0] + value, pawn_coord[1])).get_fence(side)
+        # check if fence in the way in current player's pawn's cell
+        adjacent_fence = not self._board.get_cell(pawn_coord).get_fence(side)
 
-        return direc and enemy_pawn and fence
+        return direc and enemy_pawn and far_fence and adjacent_fence
 
     def __check_win_condition(self, player):
         """Given an integer that represents the player, returns True if win conditions have been met. Otherwise returns
         False."""
-
         # if player 1, check if win conditions have been met
         if player == 1 and self._players[1].get_pawn_loc()[1] == 8:
             self._winner = 1
@@ -486,11 +445,9 @@ class QuoridorGame:
 
     def __check_initial_parameters(self, player, coord, orient=None):
         """Given an integer that represents the player, a tuple of the coordinate location of the attempted fence
-        placement, and a character (v or h) that represents orientation (optional; default is None), first checks if the
-        game has been won. If it has, returns False. If not, checks if it's the player's turn. If not, returns False.
-        Otherwise checks if coord is a tuple with two integers and is on the board. If not, returns False. Then, if
-        orient is not None, checks if orient is a character and is "v" or "h". If not, returns False. Otherwise, returns
-        true."""
+        placement, and a character (v or h) that represents orientation (optional; default is None), returns False if:
+        1) the game has been won, 2) it is not the player's turn, or 3) player or coord input is invalid (i.e., wrong
+        data type, or not in the expected format). Otherwise returns True."""
         # check game status
         if self._winner is not None:
             return False  # game is over!
@@ -534,11 +491,9 @@ class QuoridorGame:
 
     def print_board(self):
         """Prints the current state of the Quoridor game board. Used for testing purposes only."""
-
-        for row in range(9):  # iterate through cols
-
+        # iterate through cols
+        for row in range(9):
             for col in range(9):  # iterate through rows
-
                 print(str(col) + str(row), end='')  # print cell coords in line
 
                 if self._board.get_cell((col, row)).get_fence("top"):
@@ -557,13 +512,11 @@ class QuoridorGame:
                     print("P", end='')  # print pawn in line
 
                 print(" ", end='')
-
             print("\n")  # new line after each row
 
     def change_pawn_loc(self, p1, p2):
         """Given two tuples, one for player 1 and one for player 2, changes the player's pawn locations to the new
-        tuples, respectively. Returns a string. Used for testing purposes only."""
-
+        tuple coordinates, respectively. Returns a string. Used for testing purposes only."""
         # remove pawns from board
         self._board.get_cell(self._players[1].get_pawn_loc()).set_pawn(False)
         self._board.get_cell(self._players[2].get_pawn_loc()).set_pawn(False)
