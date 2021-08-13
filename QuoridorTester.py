@@ -299,40 +299,6 @@ class UnitTests(unittest.TestCase):
 
         # q.print_board()
 
-        # ----------------------------- win condition test ------------------------------------
-
-        # start new game with pawns close to win
-        q = QuoridorGame()
-        q.change_pawn_loc((4, 7), (4, 1))
-        # player 1 wins
-        self.assertTrue(q.move_pawn(1, (4, 8)))
-        # check is_winner
-        self.assertTrue(q.is_winner(1))
-        # player 2 tries to move, but game is over
-        self.assertFalse(q.move_pawn(2, (4, 0)))
-        # player 2 tries to place a fence, but game is over
-        self.assertFalse(q.place_fence(2, 'v', (4, 4)))
-
-        # q.print_board()
-
-        # start new game with pawns close to win
-        q = QuoridorGame()
-        q.change_pawn_loc((4, 7), (4, 1))
-        # player 1 moves
-        self.assertTrue(q.move_pawn(1, (3, 7)))
-        # check is_winner
-        self.assertFalse(q.is_winner(1))
-        # player 2 wins
-        self.assertTrue(q.move_pawn(2, (4, 0)))
-        # check is_winner
-        self.assertTrue(q.is_winner(2))
-        # player 1 tries to win, but the game is over
-        self.assertFalse(q.move_pawn(1, (3, 8)))
-        # player 1 tries to place a fence, but the game is over
-        self.assertFalse(q.place_fence(1, 'h', (3, 8)))
-
-        # q.print_board()
-
     def test_QuoridorGame_diagonal_edge_case(self):
         """Test all edge cases for diagonal move."""
 
@@ -871,3 +837,52 @@ class UnitTests(unittest.TestCase):
         self.assertTrue(q.move_pawn(1, (2, 2)))
 
         # q.print_board()
+
+    def test_is_winner(self):
+        """Test the is_winner method."""
+
+        # ----------------------------- win condition test ------------------------------------
+
+        # start new game with pawns close to win
+        q = QuoridorGame()
+        q.change_pawn_loc((4, 7), (4, 1))
+        # player 1 wins
+        self.assertTrue(q.move_pawn(1, (4, 8)))
+        # check is_winner
+        self.assertTrue(q.is_winner(1))
+        # player 2 tries to move, but game is over
+        self.assertFalse(q.move_pawn(2, (4, 0)))
+        # player 2 tries to place a fence, but game is over
+        self.assertFalse(q.place_fence(2, 'v', (4, 4)))
+
+        # q.print_board()
+
+        # start new game with pawns close to win
+        q = QuoridorGame()
+        q.change_pawn_loc((4, 7), (4, 1))
+        # player 1 moves
+        self.assertTrue(q.move_pawn(1, (3, 7)))
+        # check is_winner
+        self.assertFalse(q.is_winner(1))
+        # player 2 wins
+        self.assertTrue(q.move_pawn(2, (4, 0)))
+        # check is_winner
+        self.assertTrue(q.is_winner(2))
+        # player 1 tries to win, but the game is over
+        self.assertFalse(q.move_pawn(1, (3, 8)))
+        # player 1 tries to place a fence, but the game is over
+        self.assertFalse(q.place_fence(1, 'h', (3, 8)))
+
+        # q.print_board()
+
+        # start new game, players attempt to win on the wrong side of the board
+        q = QuoridorGame()
+        q.change_pawn_loc((4, 1), (4, 7))
+        # player 1 moves
+        self.assertTrue(q.move_pawn(1, (4, 0)))
+        # check is_winner
+        self.assertFalse(q.is_winner(1))
+        # player 2 wins
+        self.assertTrue(q.move_pawn(2, (4, 8)))
+        # check is_winner
+        self.assertFalse(q.is_winner(2))
