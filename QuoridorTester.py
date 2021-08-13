@@ -1,8 +1,16 @@
+# Author: Christopher Felt
+# Date: 8/04/2021
+#
+# Description: Unit test program for testing the Quoridor program. Tests gameplay using the place_fence and move_pawn
+# methods.
+
+# import modules
 from Quoridor import QuoridorGame
 import unittest
 
 
 class UnitTests(unittest.TestCase):
+    """Class for testing the Quoridor program. Inherits from Unit test."""
 
     def test_QuoridorGame_place_fence(self):
         """Test place_fence method"""
